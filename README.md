@@ -22,5 +22,5 @@
 添加依赖包。
 
 ```
-composer require module/base dev-master
+composer require module/base-module dev-master
 ```
