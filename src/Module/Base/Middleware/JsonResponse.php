@@ -40,9 +40,10 @@ class JsonResponse
 		}
 
 		// 忽略对已经是JSON的200响应处理。
-		if ($response instanceof HttpJsonResponse && $response->getStatusCode() === 200) {
-			return $response;
-		}
+        // 这里不忽略
+//		if ($response instanceof HttpJsonResponse && $response->getStatusCode() === 200) {
+//			return $response;
+//		}
 
 		// 对数NULL类型进行处理。
 		$recstr = null;
