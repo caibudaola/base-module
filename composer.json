@@ -19,7 +19,7 @@
         },
         "files": [
             "src/Module/Base/common/helpers.php",
-            "src/Module/Base/common/InnerIp.php",
+            "src/Module/Base/common/InnerIp.php"
         ]
     },
     "minimum-stability": "stable"
