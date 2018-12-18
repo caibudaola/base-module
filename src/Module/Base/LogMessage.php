@@ -1,5 +1,5 @@
 <?php
-namespace Module\Base;
+namespace Module\Base\common;
 
 class LogMessage {
 

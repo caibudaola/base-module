@@ -18,7 +18,8 @@
             "Module\\Base\\": "src"
         },
         "files": [
-            "src/Module/Base/helpers.php"
+            "src/Module/Base/common/helpers.php",
+            "src/Module/Base/common/InnerIp.php",
         ]
     },
     "minimum-stability": "stable"
