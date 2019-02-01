@@ -7,7 +7,7 @@ use Cache, Log;
 /**
  * 限制私有网络（内网）
  *
- * @author Latrell Chan
+ * @author lin
  */
 class PrivateNetwork
 {
