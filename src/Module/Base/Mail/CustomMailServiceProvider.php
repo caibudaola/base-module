@@ -14,7 +14,7 @@ class CustomMailServiceProvider extends ServiceProvider
 	public function boot()
 	{
 		$this->publishes([
-			__DIR__ . 'config/config.php' => config_path('module-mail.php')
+			__DIR__ . '/config/config.php' => config_path('module-mail.php')
 		], 'config');
 	}
 
@@ -25,7 +25,7 @@ class CustomMailServiceProvider extends ServiceProvider
 	 */
 	public function register()
 	{
-		$this->mergeConfigFrom(__DIR__ . 'config/config.php', 'module-mail');
+		$this->mergeConfigFrom(__DIR__ . '/config/config.php', 'module-mail');
 
 		$this->app->singleton('custom-mail', function ($app) {
 			$config = $app->config->get('module-mail');
