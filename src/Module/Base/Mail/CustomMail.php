@@ -5,6 +5,7 @@ use Exception;
 use Symfony\Component\Debug\Exception\FlattenException;
 use Mail;
 use Symfony\Component\Debug\ExceptionHandler as SymfonyExceptionHandler;
+use Module\Base\Mail\Mail\ExceptionOccured;
 
 class CustomMail {
 
