@@ -30,7 +30,7 @@ class CustomMailServiceProvider extends ServiceProvider
         $this->loadViewsFrom(__DIR__ . '/views', 'emails');
 
         $this->publishes([
-            __DIR__ . '/../../views' => base_path('resources/views/emails')
+            __DIR__ . '/views' => base_path('resources/views/emails')
         ], 'views');
 
 		$this->app->singleton('custom-mail', function ($app) {
