@@ -27,6 +27,12 @@ class CustomMailServiceProvider extends ServiceProvider
 	{
 		$this->mergeConfigFrom(__DIR__ . '/config/config.php', 'module-mail');
 
+        $this->loadViewsFrom(__DIR__ . '/views', 'emails');
+
+        $this->publishes([
+            __DIR__ . '/../../views' => base_path('resources/views/emails')
+        ], 'views');
+
 		$this->app->singleton('custom-mail', function ($app) {
 			$config = $app->config->get('module-mail');
 			return new CustomMail($config);
