@@ -3,6 +3,7 @@ namespace Module\Base\Middleware;
 
 use Closure;
 use Cache, Log;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * 限制私有网络（内网）
@@ -41,7 +42,8 @@ class PrivateNetwork
                 'input' => $request->input(),
                 'user-agent' => $request->header('user-agent')
             ]);
-            return response('Access denied.', 403);
+            throw new AccessDeniedHttpException('Access denied.');
+//            return response('Access denied.', 403);
         }
 
         return $next($request);
