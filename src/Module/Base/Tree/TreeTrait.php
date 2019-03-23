@@ -26,7 +26,7 @@ trait TreeTrait
         $rows = $this->newQuery()
             ->where(function(Builder $query) use ($id, $class) {
                 if ($id > 0) {
-                    $rootModel = $query->newQuery()
+                    $rootModel = $this->newQuery()
                         ->where('id', $id)
                         ->first();
                     if (!$rootModel) {
