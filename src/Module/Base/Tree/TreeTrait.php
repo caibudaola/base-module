@@ -14,11 +14,6 @@ trait TreeTrait
 {
     protected static $treeMaxNum = 1000000000;
 
-    public function treeBoot()
-    {
-        $this->registerObserver(TreeObserver::class);
-    }
-
     public function getTree(int $id)
     {
         $class = get_class($this);

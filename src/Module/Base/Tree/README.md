@@ -10,7 +10,11 @@
 
 ## 如何使用
 
-模型类(instanceof \Eloquent) 必须引用 `\Zaya\Lib\Tree\TreeTrait`，并在构造函数中调用`$this->treeBoot();`。
+模型类(instanceof \Eloquent) 必须引用 `\Zaya\Lib\Tree\TreeTrait`;。
+在`AppServiceProvider` 中的`boot()`添加
+
+    User::observe(\Module\Base\Tree\TreeObserverTreeObserver::class);
+
 ### 数据已经存在
 初始化数据：
 
