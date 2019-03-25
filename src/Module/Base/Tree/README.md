@@ -17,8 +17,10 @@
 
 ### 数据已经存在
 初始化数据：
+update users set parent_id=IFNULL(`referrer_id`, 0);
+update users set lft=0, rgt=0;
 
-update users set parent_id=referrer_id;
+初始化代码：
 
     public function execInit() {
 
@@ -118,4 +120,5 @@ update users set parent_id=referrer_id;
     }
 
 // 如果有错误，则重置数据，重新开始计算
-update users set parent_id=0, lft=0, rgt=0;
+update users set parent_id=IFNULL(`referrer_id`, 0);
+update users set lft=0, rgt=0;
