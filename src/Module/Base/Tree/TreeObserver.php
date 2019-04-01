@@ -13,10 +13,14 @@ class TreeObserver
         // 最有可能为几叉树
         $treeBranchUtmostNum = 3;
 
-        if (is_null($model->parent_id)) {
-            $model->parent_id = 0;
+        $treeParentIdName = $model->treeParentIdName ?? 'parent_id';
+        $treeLftName = $model->treeLftName ?? 'lgt';
+        $treeRgtName = $model->treeRgtName ?? 'rgt';
+
+        if (is_null($model->$treeParentIdName)) {
+            $model->$treeParentIdName = 0;
         }
-        $parentId = $model->parent_id;
+        $parentId = $model->$treeParentIdName;
 
         // 获取父节点
         // 保证父记录一定存在, 表初始化需要添加一条默认记录: [id => 0, lft => 1, rgt => 1000000000]
@@ -25,38 +29,38 @@ class TreeObserver
             ->first();
         if (is_null($parentModel)) { // 父节点不存在
             $parentModel = new \stdClass();
-            $parentModel->lft = 1;
-            $parentModel->rgt = 1000000000;
+            $parentModel->$treeLftName = 1;
+            $parentModel->$treeRgtName = 1000000000;
 
-            $model->parent_id = 0;
+            $model->$treeParentIdName = 0;
             $parentId = 0;
         }
         // 查找最大兄弟节点
         $brotherModel = $model->newQuery()
             ->where([
-                ['parent_id', $parentId],
-                ['rgt', '<', $parentModel->rgt]
+                [$treeParentIdName, $parentId],
+                [$treeRgtName, '<', $parentModel->$treeRgtName]
             ])
-            ->orderByDesc('rgt')
+            ->orderByDesc($treeRgtName)
             ->first();
         if (is_null($brotherModel)) { // 不存在兄弟节点
             $brotherModel = new \stdClass();
-            $brotherModel->lft = $parentModel->lft;
-            $brotherModel->rgt = $parentModel->lft;
+            $brotherModel->$treeLftName = $parentModel->$treeLftName;
+            $brotherModel->$treeRgtName = $parentModel->$treeLftName;
         }
-        if (($parentModel->rgt - $brotherModel->rgt) < 3) { // 父节点剩下的位置不够存放该节点
+        if (($parentModel->$treeRgtName - $brotherModel->$treeRgtName) < 3) { // 父节点剩下的位置不够存放该节点
             // 父节点右边位置 +100
-            $model->newQuery()->where('rgt', '>=', $parentModel->rgt)
-                ->update(['rgt' => new Expression("rgt + $step")]);
-            $parentModel->rgt += $step;
+            $model->newQuery()->where($treeRgtName, '>=', $parentModel->$treeRgtName)
+                ->update([$treeRgtName => new Expression($treeRgtName . " + $step")]);
+            $parentModel->$treeRgtName += $step;
         }
-        $model->lft = $brotherModel->rgt + 1;
-        $model->rgt = min(
-            $parentModel->rgt - 1,
-            $brotherModel->rgt + max(
+        $model->$treeLftName = $brotherModel->$treeRgtName + 1;
+        $model->$treeRgtName = min(
+            $parentModel->$treeRgtName - 1,
+            $brotherModel->$treeRgtName + max(
                 2,
                 (($evenNum = intval(min(
-                        ceil(($parentModel->rgt - $parentModel->lft - 1) / $treeBranchUtmostNum),
+                        ceil(($parentModel->$treeRgtName - $parentModel->$treeLftName - 1) / $treeBranchUtmostNum),
                         $parentId == 0 ? $step : $step / $treeBranchUtmostNum
                     ))) % 2) ? $evenNum - 1 : $evenNum
             )

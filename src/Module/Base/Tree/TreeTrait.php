@@ -12,12 +12,27 @@ use Illuminate\Database\Query\Expression;
  */
 trait TreeTrait
 {
-    protected static $treeMaxNum = 1000000000;
+    public $treeMaxNum = 1000000000;
 
+    public $treeParentIdName = 'parent_id';
+    public $treeLftName = 'lft';
+    public $treeRgtName = 'rgt';
+
+    public function treeBoot()
+    {
+        $this->registerObserver(TreeObserver::class);
+    }
+
+    /**
+     * 获取指定树å
+     *
+     * @param int $id
+     * @return mixed
+     */
     public function getTree(int $id)
     {
         $class = get_class($this);
-
+        Logger($this->treeParentIdName);
         $rows = $this->newQuery()
             ->where(function(Builder $query) use ($id, $class) {
                 if ($id > 0) {
@@ -27,17 +42,17 @@ trait TreeTrait
                     if (!$rootModel) {
                         throw new \Exception('节点有错误！');
                     }
-                    $query->whereBetween('lft', [$rootModel['lft'], $rootModel['rgt']]);
+                    $query->whereBetween($this->treeLftName, [$rootModel[$this->treeLftName], $rootModel[$this->treeRgtName]]);
                 }
             })
-            ->orderBy('lft')
+            ->orderBy($this->treeLftName)
             ->get()->toArray();
 
         if ($id == 0) {
             $tree[0] = [
                 'id' => 0,
-                'lft' => 0,
-                'rgt' => self::$treeMaxNum,
+                $this->treeLftName => 0,
+                $this->treeRgtName => $this->treeMaxNum,
                 'sub_tree' => [],
             ];
         } else {
@@ -45,8 +60,8 @@ trait TreeTrait
         }
         foreach ($rows as &$row) {
             $tree[$row['id']] = &$row;
-            if (isset($tree[$row['parent_id']])) {
-                $tree[$row['parent_id']]['sub_tree'][] = &$tree[$row['id']];
+            if (isset($tree[$row[$this->treeParentIdName]])) {
+                $tree[$row[$this->treeParentIdName]]['sub_tree'][] = &$tree[$row['id']];
             }
         }
         return $tree[$id];
@@ -56,11 +71,11 @@ trait TreeTrait
      * 移动节点，只有同一个棵树下的节点可以移动
      * $beforeBrotherId 和 $afterBrotherId 至少一个有值
      *
-     * @param int $moveId
-     * @param int|null $beforeBrotherId
-     * @param int|null $afterBrotherId
-     * @return true
-     * @throws \RuntimeException|ModelNotFoundException
+     * @param $moveId
+     * @param null $beforeBrotherId
+     * @param null $afterBrotherId
+     * @return bool
+     * @throws \Exception
      */
     public function move($moveId, $beforeBrotherId = null, $afterBrotherId = null)
     {
@@ -90,54 +105,53 @@ trait TreeTrait
         }
         if (!$leftBrotherItem) {
             $leftBrotherItem = [
-                'parent_id' => $rightBrotherItem['parent_id'],
-                'lft' => $rightBrotherItem['lft'] - 1,
-                'rgt' => $rightBrotherItem['lft'] - 1,
+                $this->treeParentIdName => $rightBrotherItem[$this->treeParentIdName],
+                $this->treeLftName => $rightBrotherItem[$this->treeLftName] - 1,
+                $this->treeRgtName => $rightBrotherItem[$this->treeLftName] - 1,
             ];
         }
-        if ($moveItem['parent_id'] != $leftBrotherItem['parent_id']) {
+        if ($moveItem[$this->treeParentIdName] != $leftBrotherItem[$this->treeParentIdName]) {
             // 超过移动区间
             throw new \RuntimeException('MoveOver');
         }
 
         return $this->moveBase($moveItem, $leftBrotherItem);
     }
-
     public function updateParent($moveId, $newParentId)
     {
         $moveItem = $this->newQuery()
             ->where('id', $moveId)
             ->firstOrFail();
-        if ($moveItem['parent_id'] == $newParentId) {
+        if ($moveItem[$this->treeParentIdName] == $newParentId) {
             return true;
         }
         // 找出新父节点
         if ($newParentId == 0) {
             $newParentItem = [
                 'id' => 0,
-                'lft' => 0,
-                'rgt' => self::$treeMaxNum
+                $this->treeLftName => 0,
+                $this->treeRgtName => $this->treeMaxNum
             ];
         } else {
             $newParentItem = $this->newQuery()
                 ->where('id', $newParentId)
                 ->firstOrFail();
         }
-        if ($moveItem['lft'] < $newParentItem['lft'] && $moveItem['rgt'] > $newParentItem['rgt']) {
+        if ($moveItem[$this->treeLftName] < $newParentItem[$this->treeLftName] && $moveItem[$this->treeRgtName] > $newParentItem[$this->treeRgtName]) {
             // 不能移动到自己的子树
             throw new \RuntimeException('Forbid:MoveToSubTree');
         }
         // 找出新父节点的最右子节点
         $leftBrotherItem = $this->newQuery()
-            ->where('parent_id', $newParentId)
-            ->orderByDesc('lft')
+            ->where($this->treeParentIdName, $newParentId)
+            ->orderByDesc($this->treeLftName)
             ->first();
         if (is_null($leftBrotherItem)) {
             // 构造一个假的子节点
             $leftBrotherItem = [
-                'parent_id' => $newParentItem['id'],
-                'lft' => $newParentItem['lft'],
-                'rgt' => $newParentItem['lft'],
+                $this->treeParentIdName => $newParentItem['id'],
+                $this->treeLftName => $newParentItem[$this->treeLftName],
+                $this->treeRgtName => $newParentItem[$this->treeLftName],
             ];
         }
         return $this->moveBase($moveItem, $leftBrotherItem);
@@ -146,72 +160,72 @@ trait TreeTrait
     protected function moveBase($moveItem, $leftBrotherItem)
     {
         // 计算当前要操作树的长度
-        $moveTreeLength = $moveItem['rgt'] - $moveItem['lft'] + 1;
+        $moveTreeLength = $moveItem[$this->treeRgtName] - $moveItem[$this->treeLftName] + 1;
         // 是否向左移动
-        $isMoveLeft = $moveItem['rgt'] > $leftBrotherItem['rgt'] ? true : false;
+        $isMoveLeft = $moveItem[$this->treeRgtName] > $leftBrotherItem[$this->treeRgtName] ? true : false;
         // 计算操作数和对标树的距离
-        $distance = $isMoveLeft ? $leftBrotherItem['rgt'] - $moveItem['lft'] + 1 : $leftBrotherItem['rgt'] - $moveItem['rgt'];
+        $distance = $isMoveLeft ? $leftBrotherItem[$this->treeRgtName] - $moveItem[$this->treeLftName] + 1 : $leftBrotherItem[$this->treeRgtName] - $moveItem[$this->treeRgtName];
         // 先将要操作树，移出操作区间
         $this->newQuery()
-            ->whereBetween('rgt', [$moveItem['lft'], $moveItem['rgt']])
+            ->whereBetween($this->treeRgtName, [$moveItem[$this->treeLftName], $moveItem[$this->treeRgtName]])
             ->update([
-                'lft' => new Expression("lft - " . self::$treeMaxNum),
-                'rgt' => new Expression("rgt - " . self::$treeMaxNum),
+                $this->treeLftName => new Expression($this->treeLftName . ' - ' . $this->treeMaxNum),
+                $this->treeRgtName => new Expression($this->treeRgtName . ' - ' . $this->treeMaxNum),
             ]);
         // 移动两颗树之间的树
         if ($isMoveLeft) {
             $this->newQuery()
-                ->whereBetween('rgt', [$leftBrotherItem['rgt'] + 1, $moveItem['rgt'] - 1])
-                ->whereBetween('lft', [$leftBrotherItem['lft'] + 1, $moveItem['lft'] - 1])
+                ->whereBetween($this->treeRgtName, [$leftBrotherItem[$this->treeRgtName] + 1, $moveItem[$this->treeRgtName] - 1])
+                ->whereBetween($this->treeLftName, [$leftBrotherItem[$this->treeLftName] + 1, $moveItem[$this->treeLftName] - 1])
                 ->update([
-                    'lft' => new Expression("lft + $moveTreeLength"),
-                    'rgt' => new Expression("rgt + $moveTreeLength"),
+                    $this->treeLftName => new Expression($this->treeLftName . " + $moveTreeLength"),
+                    $this->treeRgtName => new Expression($this->treeRgtName . " + $moveTreeLength"),
                 ]);
             $this->newQuery()
-                ->whereBetween('lft', [$leftBrotherItem['lft'] + 1, $moveItem['lft'] - 1])
-                ->where('rgt', '>', $moveItem['rgt'])
+                ->whereBetween($this->treeLftName, [$leftBrotherItem[$this->treeLftName] + 1, $moveItem[$this->treeLftName] - 1])
+                ->where($this->treeRgtName, '>', $moveItem[$this->treeRgtName])
                 ->update([
-                    'lft' => new Expression("lft + $moveTreeLength"),
+                    $this->treeLftName => new Expression($this->treeLftName . " + $moveTreeLength"),
                 ]);
             $this->newQuery()
-                ->whereBetween('rgt', [$leftBrotherItem['rgt'] + 1, $moveItem['rgt'] - 1])
-                ->where('lft', '<', $leftBrotherItem['lft'])
+                ->whereBetween($this->treeRgtName, [$leftBrotherItem[$this->treeRgtName] + 1, $moveItem[$this->treeRgtName] - 1])
+                ->where($this->treeLftName, '<', $leftBrotherItem[$this->treeLftName])
                 ->update([
-                    'rgt' => new Expression("rgt + $moveTreeLength"),
+                    $this->treeRgtName => new Expression($this->treeRgtName . " + $moveTreeLength"),
                 ]);
         } else {
             $this->newQuery()
-                ->whereBetween('rgt', [$moveItem['rgt'] + 1, $leftBrotherItem['rgt']])
-                ->whereBetween('lft', [$moveItem['lft'] + 1, $leftBrotherItem['lft']])
+                ->whereBetween($this->treeRgtName, [$moveItem[$this->treeRgtName] + 1, $leftBrotherItem[$this->treeRgtName]])
+                ->whereBetween($this->treeLftName, [$moveItem[$this->treeLftName] + 1, $leftBrotherItem[$this->treeLftName]])
                 ->update([
-                    'lft' => new Expression("lft - $moveTreeLength"),
-                    'rgt' => new Expression("rgt - $moveTreeLength"),
+                    $this->treeLftName => new Expression($this->treeLftName . " - $moveTreeLength"),
+                    $this->treeRgtName => new Expression($this->treeRgtName . " - $moveTreeLength"),
                 ]);
             $this->newQuery()
-                ->whereBetween('rgt', [$moveItem['rgt'] + 1, $leftBrotherItem['rgt']])
-                ->where('lft', '<', $moveItem['lft'])
+                ->whereBetween($this->treeRgtName, [$moveItem[$this->treeRgtName] + 1, $leftBrotherItem[$this->treeRgtName]])
+                ->where($this->treeLftName, '<', $moveItem[$this->treeLftName])
                 ->update([
-                    'rgt' => new Expression("rgt - $moveTreeLength"),
+                    $this->treeRgtName => new Expression($this->treeRgtName . " - $moveTreeLength"),
                 ]);
             $this->newQuery()
-                ->whereBetween('lft', [$moveItem['lft'] + 1, $leftBrotherItem['lft']])
-                ->where('rgt', '>', $leftBrotherItem['rgt'])
+                ->whereBetween($this->treeLftName, [$moveItem[$this->treeLftName] + 1, $leftBrotherItem[$this->treeLftName]])
+                ->where($this->treeRgtName, '>', $leftBrotherItem[$this->treeRgtName])
                 ->update([
-                    'lft' => new Expression("lft - $moveTreeLength"),
+                    $this->treeLftName => new Expression($this->treeLftName . " - $moveTreeLength"),
                 ]);
         }
         // 移动当前要操作的树
         $this->newQuery()
-            ->whereBetween('rgt', [$moveItem['lft'] - self::$treeMaxNum, $moveItem['rgt'] - self::$treeMaxNum])
+            ->whereBetween($this->treeRgtName, [$moveItem[$this->treeLftName] - $this->treeMaxNum, $moveItem[$this->treeRgtName] - $this->treeMaxNum])
             ->update([
-                'lft' => new Expression("lft + " . self::$treeMaxNum . " + $distance"),
-                'rgt' => new Expression("rgt + " . self::$treeMaxNum . " + $distance"),
+                $this->treeLftName => new Expression($this->treeLftName . ' + ' . $this->treeMaxNum . " + $distance"),
+                $this->treeRgtName => new Expression($this->treeRgtName . ' + ' . $this->treeMaxNum . " + $distance"),
             ]);
-        if ($moveItem['parent_id'] != $leftBrotherItem['parent_id']) {
+        if ($moveItem[$this->treeParentIdName] != $leftBrotherItem[$this->treeParentIdName]) {
             $this->newQuery()
                 ->where('id', $moveItem['id'])
                 ->update([
-                    'parent_id' => $leftBrotherItem['parent_id'],
+                    $this->treeParentIdName => $leftBrotherItem[$this->treeParentIdName],
                 ]);
         }
         return true;

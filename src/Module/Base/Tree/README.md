@@ -17,10 +17,24 @@ alter table users add rgt int(10) default 0 comment '当前节点右边值';
 ```
 ## 如何使用
 
+
 模型类(instanceof \Eloquent) 必须引用 `\Zaya\Lib\Tree\TreeTrait`;。
 在`AppServiceProvider` 中的`boot()`添加
 
     User::observe(\Module\Base\Tree\TreeObserverTreeObserver::class);
+
+
+自定义字段：
+模型类(instanceof \Eloquent) 中的构造函数：
+```php
+
+  public function __construct(array $attributes = [])
+    {
+        $this->treeParentIdName = 'referrer_id';
+
+        parent::__construct($attributes);
+    }
+```
 
 ### 数据已经存在
 初始化数据：
