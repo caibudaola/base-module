@@ -32,7 +32,6 @@ trait TreeTrait
     public function getTree(int $id)
     {
         $class = get_class($this);
-        Logger($this->treeParentIdName);
         $rows = $this->newQuery()
             ->where(function(Builder $query) use ($id, $class) {
                 if ($id > 0) {
@@ -77,7 +76,7 @@ trait TreeTrait
      * @return bool
      * @throws \Exception
      */
-    public function move($moveId, $beforeBrotherId = null, $afterBrotherId = null)
+    public function treeMove($moveId, $beforeBrotherId = null, $afterBrotherId = null)
     {
         if (is_null($beforeBrotherId) && is_null($afterBrotherId)) {
             throw new \RuntimeException('MissingParam');
