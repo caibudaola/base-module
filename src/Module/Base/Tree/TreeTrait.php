@@ -230,4 +230,53 @@ trait TreeTrait
         }
         return true;
     }
+
+    /**
+     * 如果是以后数据，那么有必要的话，可以调用此函数进行初始化
+     *
+     * @param null $parentId
+     * @param int $nextLft
+     * @return int
+     */
+    public function treeInit($parentId=null, $nextLft=1)
+    {
+        // 每次增长步长
+        $step = 100;
+
+        $treeParentIdName = $this->treeParentIdName;
+        $treeLftName = $this->treeLftName;
+        $treeRgtName = $this->treeRgtName;
+
+        if (!$parentId) {
+            $query = $this->newQuery()
+                ->where(function(Builder $query){
+                    return $query->whereNull($this->treeParentIdName)
+                        ->orWhere($this->treeParentIdName, 0);
+                });
+        } else {
+            $query = $this->newQuery()
+                ->where($this->treeParentIdName, $parentId);
+        }
+
+        $nodes = $query
+            ->select(['id', $treeParentIdName, $treeLftName, $treeRgtName])
+            ->orderBy($treeLftName)
+            ->get();
+
+        if (!$nodes->toArray()) {
+            return $nextLft + $step - 2;
+        }
+
+        foreach ($nodes as $node) {
+            $isHasSub = true;
+            $node->$treeLftName = $nextLft;
+            $lastRgt = $this->treeInit($node->id, $nextLft + 1);
+            $node->$treeRgtName = $lastRgt + 1;
+            $node->save();
+
+            $nextLft = $lastRgt + 2;
+        }
+
+        return $nextLft + $step;
+    }
 }
