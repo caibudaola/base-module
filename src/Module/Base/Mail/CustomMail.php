@@ -12,6 +12,7 @@ class CustomMail {
 	public function __construct($config)
 	{
         $this->debug = isset($config['debug']) ? $config['debug'] : 'false';
+        $this->receiver = isset($config['receiver']) ? $config['receiver'] : 'lzw122333@gmail.com';
 	}
 
     public function sendEmail(Exception $exception)
@@ -23,7 +24,7 @@ class CustomMail {
 
             $html = $handler->getHtml($e);
 
-            Mail::to(env('MAIL_EXCEPTION_RECEIVER', 'lzw122333@gmail.com'))->send(new ExceptionOccured($html));
+            Mail::to($this->receiver)->send(new ExceptionOccured($html));
         } catch (Exception $ex) {
             dd($ex);
         }
