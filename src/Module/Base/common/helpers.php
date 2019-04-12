@@ -60,12 +60,12 @@ if ( ! function_exists( 'getClientIp' ) ) {
                 return $ips[1];
             }
             return $_SERVER['HTTP_X_FORWARDED_FOR'];
-        }elseif ( isset($_SERVER['SERVER_ADDR']) ) {
-
-            return $_SERVER['SERVER_ADDR'];
-        } else {
+        }elseif ( isset($_SERVER['REMOTE_ADDR']) ) {
 
             return $_SERVER['REMOTE_ADDR'];
+        } else {
+
+            return $_SERVER['SERVER_ADDR'];
         }
     }
 }
