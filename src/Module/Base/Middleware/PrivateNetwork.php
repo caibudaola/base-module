@@ -23,7 +23,7 @@ class PrivateNetwork
     public function handle($request, Closure $next)
     {
         // 取得请求IP。
-        $ip = $request->getClientIp();
+        $ip = getClientIp();
 
         // 允许调试模式下本地访问。
         if (config('app.debug') && isInternalNetwork($ip)) {
@@ -37,7 +37,7 @@ class PrivateNetwork
         // 检查IP是否在白名单中。
         if (! in_array($ip, $arrWhiteList)) {
             Log::info('Access denied', [
-                'ip' => join(',', $request->getClientIps()),
+                'ip' => join(',', $request->getClientIps()) . ',' . $ip,
                 'path' => $request->path(),
                 'input' => $request->input(),
                 'user-agent' => $request->header('user-agent')
