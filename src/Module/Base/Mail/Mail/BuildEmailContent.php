@@ -28,6 +28,7 @@ class BuildEmailContent extends Mailable
     public function __construct($content, $strTitle)
     {
         $this->content = $content;
+        $this->strTitle = $strTitle;
     }
 
     /**
