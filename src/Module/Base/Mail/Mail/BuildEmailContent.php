@@ -6,7 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-class ExceptionOccured extends Mailable
+class BuildEmailContent extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -16,13 +16,16 @@ class ExceptionOccured extends Mailable
      * @var string
      */
     public $content;
+    private $strTitle;
 
     /**
-     * Create a new message instance.
+     * Create a new message instance
      *
-     * @return void
+     * BuildEmailContent constructor.
+     * @param $content
+     * @param $strTitle
      */
-    public function __construct($content)
+    public function __construct($content, $strTitle)
     {
         $this->content = $content;
     }
@@ -36,6 +39,6 @@ class ExceptionOccured extends Mailable
     {
         return $this->view('emails.exception')
             ->with('content', $this->content)
-            ->subject(env('APP_NAME').'-异常告警');
+            ->subject(env('APP_NAME').'-' . $this->strTitle);
     }
 }
