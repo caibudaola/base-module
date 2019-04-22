@@ -83,6 +83,8 @@ trait TreeTrait
         }
 
         $collection = $this->newQuery()
+            ->lockForUpdate()
+            ->select(['id', $this->treeParentIdName, $this->treeLftName, $this->treeRgtName])
             ->whereIn('id', array_filter([$moveId, $beforeBrotherId, $afterBrotherId]))
             ->get();
         $moveItem = [];
@@ -119,6 +121,8 @@ trait TreeTrait
     public function updateParent($moveId, $newParentId)
     {
         $moveItem = $this->newQuery()
+            ->lockForUpdate()
+            ->select(['id', $this->treeParentIdName, $this->treeLftName, $this->treeRgtName])
             ->where('id', $moveId)
             ->firstOrFail();
         if ($moveItem[$this->treeParentIdName] == $newParentId) {
@@ -133,6 +137,8 @@ trait TreeTrait
             ];
         } else {
             $newParentItem = $this->newQuery()
+                ->lockForUpdate()
+                ->select(['id', $this->treeParentIdName, $this->treeLftName, $this->treeRgtName])
                 ->where('id', $newParentId)
                 ->firstOrFail();
         }
@@ -142,6 +148,8 @@ trait TreeTrait
         }
         // 找出新父节点的最右子节点
         $leftBrotherItem = $this->newQuery()
+            ->lockForUpdate()
+            ->select(['id', $this->treeParentIdName, $this->treeLftName, $this->treeRgtName])
             ->where($this->treeParentIdName, $newParentId)
             ->orderByDesc($this->treeLftName)
             ->first();
@@ -258,6 +266,7 @@ trait TreeTrait
         }
 
         $nodes = $query
+            ->lockForUpdate()
             ->select(['id', $treeParentIdName, $treeLftName, $treeRgtName])
             ->orderBy($treeLftName)
             ->get();

@@ -9,46 +9,35 @@
 | rgt |int | 当前节点右边值 |
 ```$xslt
 
-alter table users add parent_id int(10) default 0 comment '当前节点对应的父节点ID';
+alter table table_name add parent_id int(10) default 0 comment '当前节点对应的父节点ID';
 
-alter table users add lft int(10) default 0 comment '当前节点左边值';
+alter table table_name add lft int(10) default 0 comment '当前节点左边值';
 
-alter table users add rgt int(10) default 0 comment '当前节点右边值';
+alter table table_name add rgt int(10) default 0 comment '当前节点右边值';
 ```
 ## 如何使用
 
-
-模型类(instanceof \Eloquent) 必须引用 `\Zaya\Lib\Tree\TreeTrait`;。
-在`AppServiceProvider` 中的`boot()`添加
-
-    User::observe(\Module\Base\Tree\TreeObserverTreeObserver::class);
-
+模型类(instanceof \Eloquent) 必须引用 `\Module\Base\Tree\TreeTrait`，并在构造函数中调用`$this->treeBoot();`。
 
 自定义字段：
 模型类(instanceof \Eloquent) 中的构造函数：
 ```php
+public function __construct(array $attributes = [])
+{
+    $this->treeParentIdName = 'custom_parent_id';
+    $this->treeLftName = 'custom_lft';
+    $this->treeRgtName = 'custom_rgt';
 
-  public function __construct(array $attributes = [])
-    {
-        $this->treeParentIdName = 'referrer_id';
-
-        parent::__construct($attributes);
-    }
+    parent::__construct($attributes);
+}
 ```
 
 ### 数据已经存在
 初始化数据：
-```mysql
 
-update users set parent_id=IFNULL(`referrer_id`, 0);
-update users set lft=0, rgt=0;
-```
-
-初始化代码：
-
-    this->treeInit();
+    $this->treeInit();
     
 
-// 如果有错误，则重置数据，重新开始计算
-update users set parent_id=IFNULL(`referrer_id`, 0);
-update users set lft=0, rgt=0;
+### 注意
+
+在创建或者移动节点的时候，有可能大范围更新 lft/rgt，所以需要在调用外层加上事务

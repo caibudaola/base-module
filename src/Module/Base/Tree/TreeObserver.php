@@ -25,6 +25,8 @@ class TreeObserver
         // 获取父节点
         // 保证父记录一定存在, 表初始化需要添加一条默认记录: [id => 0, lft => 1, rgt => 1000000000]
         $parentModel = $model->newQuery()
+            ->lockForUpdate()
+            ->select(['id', $treeParentIdName, $treeLftName, $treeRgtName])
             ->where('id', $parentId)
             ->first();
         if (is_null($parentModel)) { // 父节点不存在
@@ -37,6 +39,8 @@ class TreeObserver
         }
         // 查找最大兄弟节点
         $brotherModel = $model->newQuery()
+            ->lockForUpdate()
+            ->select(['id', $treeParentIdName, $treeLftName, $treeRgtName])
             ->where([
                 [$treeParentIdName, $parentId],
                 [$treeRgtName, '<', $parentModel->$treeRgtName]
