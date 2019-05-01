@@ -28,6 +28,7 @@ class BuildEmailContent extends Mailable
     public function __construct($content, $strTitle)
     {
         $this->content = $content;
+        $this->strTitle = $strTitle;
     }
 
     /**
@@ -39,6 +40,6 @@ class BuildEmailContent extends Mailable
     {
         return $this->view('emails.exception')
             ->with('content', $this->content)
-            ->subject(env('APP_NAME').'-' . $this->strTitle);
+            ->subject(gethostname().'-'.env('APP_NAME').'-' . $this->strTitle);
     }
 }
