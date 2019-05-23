@@ -9,7 +9,7 @@ class TreeObserver
     public function creating(Model $model)
     {
         // 每次增长步长
-        $step = 100;
+        $step = 3;
         // 最有可能为几叉树
         $treeBranchUtmostNum = 3;
 
@@ -37,6 +37,7 @@ class TreeObserver
             $model->$treeParentIdName = 0;
             $parentId = 0;
         }
+
         // 查找最大兄弟节点
         $brotherModel = $model->newQuery()
             ->lockForUpdate()
@@ -52,10 +53,17 @@ class TreeObserver
             $brotherModel->$treeLftName = $parentModel->$treeLftName;
             $brotherModel->$treeRgtName = $parentModel->$treeLftName;
         }
+
         if (($parentModel->$treeRgtName - $brotherModel->$treeRgtName) < 3) { // 父节点剩下的位置不够存放该节点
-            // 父节点右边位置 +100
+            // 父节点右边位置 + 一个步长
             $model->newQuery()->where($treeRgtName, '>=', $parentModel->$treeRgtName)
                 ->update([$treeRgtName => new Expression($treeRgtName . " + $step")]);
+            // 其余节点的左右节点也需要扩张一个步长，即，集体右移一个步长
+            $model->newQuery()->where($treeLftName, '>', $parentModel->$treeRgtName)
+                ->update([
+                    $treeLftName => new Expression($treeLftName . " + $step"),
+                    $treeRgtName => new Expression($treeRgtName . " + $step"),
+                ]);
             $parentModel->$treeRgtName += $step;
         }
         $model->$treeLftName = $brotherModel->$treeRgtName + 1;
