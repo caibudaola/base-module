@@ -36,6 +36,13 @@ class TreeObserver
 
             $model->$treeParentIdName = 0;
             $parentId = 0;
+        } else {
+            $model->newQuery()
+                ->lockForUpdate()
+                ->select(['id', $treeParentIdName, $treeLftName, $treeRgtName])
+                ->where('id', '>=', $parentId)
+                ->get();
+            Logger('++++', [$parentId, date('Y-m-d H:i:s')]);
         }
 
         // 查找最大兄弟节点
