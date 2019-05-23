@@ -37,12 +37,12 @@ class TreeObserver
             $model->$treeParentIdName = 0;
             $parentId = 0;
         } else {
-            $model->newQuery()
-                ->lockForUpdate()
-                ->select(['id', $treeParentIdName, $treeLftName, $treeRgtName])
-                ->where('id', '>=', $parentId)
-                ->get();
-            Logger('++++', [$parentId, date('Y-m-d H:i:s')]);
+//            $model->newQuery()
+//                ->lockForUpdate()
+//                ->select(['id', $treeParentIdName, $treeLftName, $treeRgtName])
+//                ->where('id', '>=', $parentId)
+//                ->get();
+//            Logger('++++', [$parentId, date('Y-m-d H:i:s')]);
         }
 
         // 查找最大兄弟节点
@@ -63,7 +63,7 @@ class TreeObserver
 
         if (($parentModel->$treeRgtName - $brotherModel->$treeRgtName) < 3) { // 父节点剩下的位置不够存放该节点
             // 父节点右边位置 + 一个步长
-            $model->newQuery()->where($treeRgtName, '>=', $parentModel->$treeRgtName)
+            $model->newQuery()->where($treeRgtName, $parentModel->$treeRgtName)
                 ->update([$treeRgtName => new Expression($treeRgtName . " + $step")]);
             // 其余节点的左右节点也需要扩张一个步长，即，集体右移一个步长
             $model->newQuery()->where($treeLftName, '>', $parentModel->$treeRgtName)
