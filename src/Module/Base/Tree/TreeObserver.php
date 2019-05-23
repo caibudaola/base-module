@@ -9,7 +9,7 @@ class TreeObserver
     public function creating(Model $model)
     {
         // 每次增长步长
-        $step = 3;
+        $step = 100;
         // 最有可能为几叉树
         $treeBranchUtmostNum = 3;
 
