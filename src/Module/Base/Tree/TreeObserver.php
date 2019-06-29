@@ -55,9 +55,11 @@ class TreeObserver
         }
 
         if (($parentModel->$treeRgtName - $brotherModel->$treeRgtName) < 3) { // 父节点剩下的位置不够存放该节点
-            // 父节点右边位置 + 一个步长
-            $model->newQuery()->where($treeRgtName, $parentModel->$treeRgtName)
+            // 所有父节点右边位置 + 一个步长
+            $model->newQuery()->where($treeLftName, '<', $parentModel->$treeRgtName)
+                ->where($treeRgtName, '>=', $parentModel->$treeRgtName)
                 ->update([$treeRgtName => new Expression($treeRgtName . " + $step")]);
+
             // 其余节点的左右节点也需要扩张一个步长，即，集体右移一个步长
             $model->newQuery()->where($treeLftName, '>', $parentModel->$treeRgtName)
                 ->update([
