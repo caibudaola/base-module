@@ -201,9 +201,16 @@ trait TreeTrait
                     $this->treeRgtName => new Expression($this->treeRgtName . " + $moveTreeLength"),
                 ]);
         } else {
+            // 如果将一个中间子节点，移到上一级父节点同级，则可能导致最右兄弟节点的左节点小余需要移动的节点的左右值，需要额外判断
+            $arrLeft = [$moveItem[$this->treeLftName] + 1, $leftBrotherItem[$this->treeLftName]];
+            if ( $moveItem[$this->treeLftName] > $leftBrotherItem[$this->treeLftName] ) {
+                // 这些需要左移
+                $arrLeft = [$moveItem[$this->treeRgtName] + 1, $leftBrotherItem[$this->treeRgtName]];
+            }
+
             $this->newQuery()
                 ->whereBetween($this->treeRgtName, [$moveItem[$this->treeRgtName] + 1, $leftBrotherItem[$this->treeRgtName]])
-                ->whereBetween($this->treeLftName, [$moveItem[$this->treeLftName] + 1, $leftBrotherItem[$this->treeLftName]])
+                ->whereBetween($this->treeLftName, $arrLeft)
                 ->update([
                     $this->treeLftName => new Expression($this->treeLftName . " - $moveTreeLength"),
                     $this->treeRgtName => new Expression($this->treeRgtName . " - $moveTreeLength"),
