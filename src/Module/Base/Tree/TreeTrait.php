@@ -194,8 +194,12 @@ trait TreeTrait
                 ->update([
                     $this->treeLftName => new Expression($this->treeLftName . " + $moveTreeLength"),
                 ]);
+
+            // 有正常最右兄弟节点时，该节点最终不动，没有时，父节点的右边需要增长
+            $nTreeBrotherRight = $leftBrotherItem[$this->treeRgtName] != $leftBrotherItem[$this->treeLftName]
+                ? $leftBrotherItem[$this->treeRgtName] + 1 : $leftBrotherItem[$this->treeRgtName];
             $this->newQuery()
-                ->whereBetween($this->treeRgtName, [$leftBrotherItem[$this->treeRgtName], $moveItem[$this->treeRgtName] - 1])
+                ->whereBetween($this->treeRgtName, [$nTreeBrotherRight, $moveItem[$this->treeRgtName] - 1])
                 ->where($this->treeLftName, '<=', $leftBrotherItem[$this->treeLftName])
                 ->update([
                     $this->treeRgtName => new Expression($this->treeRgtName . " + $moveTreeLength"),
