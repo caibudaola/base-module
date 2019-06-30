@@ -189,13 +189,13 @@ trait TreeTrait
                     $this->treeRgtName => new Expression($this->treeRgtName . " + $moveTreeLength"),
                 ]);
             $this->newQuery()
-                ->whereBetween($this->treeLftName, [$leftBrotherItem[$this->treeLftName] + 1, $moveItem[$this->treeLftName] - 1])
+                ->whereBetween($this->treeLftName, [$leftBrotherItem[$this->treeLftName], $moveItem[$this->treeLftName] - 1])
                 ->where($this->treeRgtName, '>=', $moveItem[$this->treeRgtName])
                 ->update([
                     $this->treeLftName => new Expression($this->treeLftName . " + $moveTreeLength"),
                 ]);
             $this->newQuery()
-                ->whereBetween($this->treeRgtName, [$leftBrotherItem[$this->treeRgtName] + 1, $moveItem[$this->treeRgtName] - 1])
+                ->whereBetween($this->treeRgtName, [$leftBrotherItem[$this->treeRgtName], $moveItem[$this->treeRgtName] - 1])
                 ->where($this->treeLftName, '<=', $leftBrotherItem[$this->treeLftName])
                 ->update([
                     $this->treeRgtName => new Expression($this->treeRgtName . " + $moveTreeLength"),
