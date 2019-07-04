@@ -190,7 +190,7 @@ trait TreeTrait
                 ]);
             // 参照树的父节点(不包含与操作树移动之前共有的父节点)
             $leftBrotherParentTreeOperate = '<';
-            if ($leftBrotherItem[$this->treeLftName] == $leftBrotherItem[$this->treeLftName]) {
+            if ($leftBrotherItem[$this->treeLftName] == $leftBrotherItem[$this->treeRgtName]) {
                 // 参照节点为虚拟节点
                 $leftBrotherParentTreeOperate = '<=';
             }
@@ -202,7 +202,7 @@ trait TreeTrait
                 ]);
             // 操作树移动之前 与 参照树 之间的节点
             $this->newQuery()
-                ->whereBetween($this->treeRgtName, [$leftBrotherItem[$this->treeLftName], $moveItem[$this->treeRgtName]])
+                ->whereBetween($this->treeRgtName, [$leftBrotherItem[$this->treeRgtName] + 1, $moveItem[$this->treeRgtName]])
                 ->whereBetween($this->treeLftName, [$leftBrotherItem[$this->treeLftName], $moveItem[$this->treeRgtName]])
                 ->update([
                     $this->treeLftName => new Expression($this->treeLftName . " + $moveTreeLength"),
@@ -211,7 +211,7 @@ trait TreeTrait
         } else {
             // 操作树移动之前的父节点(不包含与参照树共有的父节点)
             $moveParentTreeOperate = '<';
-            if ($leftBrotherItem[$this->treeLftName] == $leftBrotherItem[$this->treeLftName]) {
+            if ($leftBrotherItem[$this->treeLftName] == $leftBrotherItem[$this->treeRgtName]) {
                 // 参照节点为虚拟节点
                 $moveParentTreeOperate = '<=';
             }
