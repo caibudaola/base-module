@@ -181,13 +181,14 @@ trait TreeTrait
             ]);
         // 移动两颗树之间的树
         if ($isMoveLeft) {
-            // 操作树移动之前的父节点(不包含与参照树共有的父节点)
+            // 成立条件，从一个父节点，移动到左边，父节点的左值需要需要加上对应的距离，操作树移动之前的父节点(不包含与参照树共有的父节点)都需要左值增加
             $this->newQuery()
                 ->whereBetween($this->treeLftName, [$leftBrotherItem[$this->treeLftName], $moveItem[$this->treeRgtName]])
                 ->where($this->treeRgtName, '>', $moveItem[$this->treeRgtName])
                 ->update([
                     $this->treeLftName => new Expression($this->treeLftName . " + $moveTreeLength"),
                 ]);
+
             // 参照树的父节点(不包含与操作树移动之前共有的父节点)
             $leftBrotherParentTreeOperate = '<';
             if ($leftBrotherItem[$this->treeLftName] == $leftBrotherItem[$this->treeRgtName]) {
@@ -201,30 +202,35 @@ trait TreeTrait
                     $this->treeRgtName => new Expression($this->treeRgtName . " + $moveTreeLength"),
                 ]);
             // 操作树移动之前 与 参照树 之间的节点
+            // 当没有最右节点，条件左节点的左值必须要 +1，防止条件2成立后移动的父节点再次被移动。
+            // 当存在最右节点时，左移时的，条件右节点左值必须要 +1，防止无需移动的最右节点被移动。
+            // 综上，左移时，条件左右节点的左值都需要 +1.
             $this->newQuery()
                 ->whereBetween($this->treeRgtName, [$leftBrotherItem[$this->treeRgtName] + 1, $moveItem[$this->treeRgtName]])
-                ->whereBetween($this->treeLftName, [$leftBrotherItem[$this->treeLftName], $moveItem[$this->treeRgtName]])
+                ->whereBetween($this->treeLftName, [$leftBrotherItem[$this->treeLftName] + 1, $moveItem[$this->treeRgtName]])
                 ->update([
                     $this->treeLftName => new Expression($this->treeLftName . " + $moveTreeLength"),
                     $this->treeRgtName => new Expression($this->treeRgtName . " + $moveTreeLength"),
                 ]);
         } else {
-            // 操作树移动之前的父节点(不包含与参照树共有的父节点)
-            $moveParentTreeOperate = '<';
-            if ($leftBrotherItem[$this->treeLftName] == $leftBrotherItem[$this->treeRgtName]) {
-                // 参照节点为虚拟节点
-                $moveParentTreeOperate = '<=';
-            }
+            // 成立条件，移动到父节点下，操作树父节点(不包含与参照树移动之前共有的父节点)右值需要减去对应的距离
             $this->newQuery()
                 ->whereBetween($this->treeRgtName, [$moveItem[$this->treeLftName], $leftBrotherItem[$this->treeRgtName]])
-                ->where($this->treeLftName, $moveParentTreeOperate, $moveItem[$this->treeLftName])
+                ->where($this->treeLftName, '<', $moveItem[$this->treeLftName])
                 ->update([
                     $this->treeRgtName => new Expression($this->treeRgtName . " - $moveTreeLength"),
                 ]);
-            // 参照树的父节点(不包含与操作树移动之前共有的父节点)
+
+            // 参照树移动之前的父节点(不包含与操作树共有的父节点)
+            $moveParentTreeOperate = '>';
+            if ($leftBrotherItem[$this->treeLftName] == $leftBrotherItem[$this->treeRgtName]) {
+                // 参照节点为虚拟节点
+                $moveParentTreeOperate = '>=';
+            }
+            // 成立条件，参照树的父节点(不包含与操作树移动之前共有的父节点)左值需要减去对应的距离
             $this->newQuery()
                 ->whereBetween($this->treeLftName, [$moveItem[$this->treeLftName], $leftBrotherItem[$this->treeRgtName]])
-                ->where($this->treeRgtName, '>', $leftBrotherItem[$this->treeRgtName])
+                ->where($this->treeRgtName, $moveParentTreeOperate, $leftBrotherItem[$this->treeRgtName])
                 ->update([
                     $this->treeLftName => new Expression($this->treeLftName . " - $moveTreeLength"),
                 ]);
