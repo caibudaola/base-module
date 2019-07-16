@@ -47,7 +47,7 @@ composer require module/base-module dev-master
     ]
 ```
 
-运行 `php artisan vendor:publish` 命令，发布配置和视图文件文件到项目中。
+运行 `php artisan vendor:publish` 命令，发布配置和视图文件到项目中。
 
 ### 调用
 
@@ -59,3 +59,32 @@ composer require module/base-module dev-master
 ```
 
 不足之处，目前仅指出异常邮件处理，后续加入其他类型邮件处理
+
+## 接口调用
+
+执行第一步安装之后
+找到 `config/app.php` 配置文件中，key为 `providers` 的数组，在数组中添加服务提供者。
+
+```php
+    'providers' => [
+        // ...
+        \Module\DataApi\DataApiProvider::class,
+    ]
+```
+
+找到key为 `aliases` 的数组，在数组中注册Facades。
+
+```php
+    'aliases' => [
+        // ...
+        'CustomMail' =>  \Module\DataApi\Facades\DataApi::class,
+    ]
+```
+
+运行 `php artisan vendor:publish` 命令，发布配置文件到项目中。
+
+### 调用
+
+```php
+    DataApi::userReportList($param1, $param2, $param3);}
+```
