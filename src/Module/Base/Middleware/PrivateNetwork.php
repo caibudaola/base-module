@@ -25,8 +25,9 @@ class PrivateNetwork
         // 取得请求IP。
         $ip = getClientIp();
 
+        // 允许关闭IP限制时访问
         // 允许调试模式下本地访问。
-        if (config('app.debug') && isInternalNetwork($ip)) {
+        if (! env('IP_LIMIT', true) || config('app.debug') && isInternalNetwork($ip)) {
             return $next($request);
         }
 
