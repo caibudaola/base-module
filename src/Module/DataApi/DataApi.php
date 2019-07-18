@@ -14,23 +14,32 @@ class DataApi  extends Http {
     /**
      * 获取用户报表信息
      *
-     * @param null $strIdOrUsername
      * @param null $nStartTime
      * @param null $nEndTime
-     * @return mixed
+     * @param null $userIdOrName
+     * @param null $referrer_id
+     * @param null $b_ReturnFlag
+     * @return null
      */
-    public function userReportList($strIdOrUsername=null, $nStartTime=null, $nEndTime=null)
+    public function userReportList($nStartTime=null, $nEndTime=null, $userIdOrName=null, $referrer_id=null, $b_ReturnFlag=null)
     {
         $data = [    ];
-        if ($strIdOrUsername) {
-            $data['user_id_or_name'] = $strIdOrUsername;
-        }
         if ($nStartTime) {
             $data['start_date'] = $nStartTime;
         }
         if ($nEndTime) {
             $data['end_date'] = $nEndTime;
         }
+        if ($referrer_id) {
+            $data['referrer_id'] = $referrer_id;
+        }
+        if ($b_ReturnFlag) {
+            $data['b_ReturnFlag'] = $b_ReturnFlag;
+        }
+        if ($userIdOrName) {
+            $data['user_id_or_name'] = $userIdOrName;
+        }
+
         return $this->httpGet('api/reports/user-report-list', $data);
     }
 }
