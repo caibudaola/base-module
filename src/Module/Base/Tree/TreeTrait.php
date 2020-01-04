@@ -24,7 +24,7 @@ trait TreeTrait
     }
 
     /**
-     * 获取指定树å
+     * 获取指定树
      *
      * @param int $id
      * @return mixed
@@ -266,9 +266,10 @@ trait TreeTrait
      *
      * @param null $parentId
      * @param int $nextLft
+     * @param array $updateData 需要更新的数据
      * @return int
      */
-    public function treeInit($parentId=null, $nextLft=1)
+    public function treeInit($parentId=null, $nextLft=1, $updateData=[])
     {
         // 每次增长步长
         $step = 100;
@@ -290,7 +291,7 @@ trait TreeTrait
 
         $nodes = $query
             ->lockForUpdate()
-            ->select(['id', $treeParentIdName, $treeLftName, $treeRgtName])
+            ->select(array_merge(['id', $treeParentIdName, $treeLftName, $treeRgtName], array_keys($updateData)))
             ->orderBy($treeLftName)
             ->get();
 
@@ -302,6 +303,10 @@ trait TreeTrait
             $node->$treeLftName = $nextLft;
             $lastRgt = $this->treeInit($node->id, $nextLft + 1);
             $node->$treeRgtName = $lastRgt + 1;
+
+            foreach ($updateData as $field => $value) {
+                $node->$field = $value;
+            }
             $node->save();
 
             $nextLft = $lastRgt + 2;
