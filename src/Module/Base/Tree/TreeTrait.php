@@ -301,7 +301,7 @@ trait TreeTrait
 
         foreach ($nodes as $node) {
             $node->$treeLftName = $nextLft;
-            $lastRgt = $this->treeInit($node->id, $nextLft + 1);
+            $lastRgt = $this->treeInit($node->id, $nextLft + 1, $updateData);
             $node->$treeRgtName = $lastRgt + 1;
 
             foreach ($updateData as $field => $value) {
