@@ -9,8 +9,8 @@
         }
     ],
     "require": {
-        "php": "^5.6 | ^7.0",
-        "illuminate/support": "^5.4",
+        "php": "^7.0",
+        "illuminate/support": "^8.0",
         "curl/curl": "^2.0"
     },
     "autoload": {
